@@ -1,6 +1,6 @@
 <?php
 
-namespace App\services;
+namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -9,29 +9,36 @@ use Illuminate\Support\Facades\Hash;
 class AuthService
 {
     /**
-     * Create a new class instance.
+     * Register a new user
      */
-    public function registerUsers($request)
+    public function registerUser(array $data)
     {
-        $user = User::create([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'type' => $request->type,
-            'village_id' => $request->village_id,
-            'profession_id' => $request->profession_id,
-            'password' => Hash::make($request->password),
-        ]);
-        return $user;
+        $data['password'] = Hash::make($data['password']);
+        // Set default type/role if not provided
+        // if (!isset($data['type'])) {
+        //     $data['type'] = 'no';
+        // }
+        // if (!isset($data['role'])) {
+        //     $data['role'] = 'user';
+        // }
+        
+        return User::create($data);
     }
 
-    public function loginUser($request)
+    /**
+     * Attempt login with credentials
+     * Returns true on success, false on failure
+     */
+    public function attemptLogin(array $credentials)
     {
-        if (!Auth::attempt($request('phone', 'password'))) {
-            return response()->json([
-                'message' => 'Phone or password is incorrect',
-            ], 401);
-        }
-        $user = User::where('phone', $request->phone)->first();
-        return $user;
+        return Auth::attempt($credentials);
+    }
+    
+    /**
+     * Get user by phone
+     */
+    public function getUserByPhone($phone)
+    {
+        return User::where('phone', $phone)->first();
     }
 }

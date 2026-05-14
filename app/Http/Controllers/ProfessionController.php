@@ -2,34 +2,64 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Profession;
-use App\Models\User;
+use App\Services\ProfessionService;
 use Illuminate\Http\Request;
 
 class ProfessionController extends Controller
 {
+    protected $professionService;
+
+    public function __construct(ProfessionService $professionService)
+    {
+        $this->professionService = $professionService;
+    }
+
     public function index()
     {
-        $profession = Profession::select('id','name')->get();
+        $professions = $this->professionService->getAllProfessions();
         return response()->json([
             'message' => 'successfully',
-            'village' => $profession
+            'professions' => $professions,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate(['name' => 'required|string|max:255']);
+        $profession = $this->professionService->createProfession($validated);
+
+        return response()->json([
+            'message' => 'Profession created successfully',
+            'profession' => $profession,
+        ], 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate(['name' => 'required|string|max:255']);
+        $profession = $this->professionService->updateProfession($id, $validated);
+
+        return response()->json([
+            'message' => 'Profession updated successfully',
+            'profession' => $profession,
+        ], 200);
+    }
+
+    public function destroy($id)
+    {
+        $this->professionService->deleteProfession($id);
+
+        return response()->json([
+            'message' => 'Profession deleted successfully',
+        ], 200);
     }
 
     public function users_in_profession($id)
     {
-        $profession = User::where('profession_id', $id)->get()->map(function ($user) {
-            return [
-                'name' => $user->name,
-                'phone' => $user->phone,
-                'village' => $user->village->name,
-                'profession' => $user->profession->name,
-            ];
-        });
+        $users = $this->professionService->getUsersInProfession($id);
         return response()->json([
-            'message' => 'successfully',
-            'village' => $profession
-        ]);
+            'message' => 'Users in profession retrieved successfully',
+            'users' => $users,
+        ], 200);
     }
 }

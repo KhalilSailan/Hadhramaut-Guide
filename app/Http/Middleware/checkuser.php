@@ -11,8 +11,14 @@ class checkuser
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::user()->role === 'admin')
+        if (Auth::check() && Auth::user()->role === 'admin') {
             return $next($request);
-        return response()->json(['message' => 'unauthorized'], 403);
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json(['message' => 'unauthorized'], 403);
+        }
+
+        return redirect('/directory')->withErrors(['error' => 'Unauthorized Access']);
     }
 }
